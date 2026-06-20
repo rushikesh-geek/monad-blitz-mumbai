@@ -4,52 +4,40 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         JUDGE / OPERATOR                                │
-│                    (Browser + Simulate Button)                          │
+│                         Web Client (Vercel)                             │
+│              Dashboard · Map · Agents · Treasury                        │
 └───────────────────────────────┬─────────────────────────────────────────┘
                                 │
                     HTTP POST /simulate · GET /state · SSE /events
                                 │
 ┌───────────────────────────────▼─────────────────────────────────────────┐
-│                      BACKEND SERVER (Node.js)                           │
+│                      Backend (Railway / Node.js)                        │
 │  ┌─────────────────┐  ┌──────────────────┐  ┌───────────────────────┐  │
 │  │  Agent Swarm    │  │   Finalizer      │  │  SSE Event Broadcast  │  │
-│  │  (4 agents)     │  │  (quorum check)  │  │  (live activity feed) │  │
+│  │  (4 agents)     │  │  (quorum check)  │  │  (activity feed)      │  │
 │  └────────┬────────┘  └────────┬─────────┘  └───────────────────────┘  │
 └───────────┼────────────────────┼────────────────────────────────────────┘
             │                    │
             │  agentVote()       │  finalizeConsensus()
-            │  (4 parallel txns) │
             ▼                    ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │              ProofOfReality.sol — Monad Testnet (10143)                 │
 │  0x85c1C9CB97438DDE2E680804a7A6Dbff68F2bB38                             │
-│                                                                         │
-│  submitObservation() → observations[id] (isolated storage slot)         │
-│  agentVote()         → per-agent stake + vote record                    │
-│  finalizeConsensus() → payout winners, slash losers, update reputation  │
-└─────────────────────────────────────────────────────────────────────────┘
-            │
-            │  Claude AI via OpenRouter (per-agent reasoning)
-            ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│  Agent-Flood 🌊  Agent-Grid ⚡  Agent-Crowd 👥  Agent-Skeptic 🔍         │
-│  Independent wallets · Independent stakes · Autonomous decisions        │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Data Flow (One Observation)
+## Data Flow
 
 ```mermaid
 sequenceDiagram
-    participant J as Judge
-    participant S as Server
+    participant U as User
+    participant S as Backend
     participant C as Contract
-    participant A as 4 Agents
+    participant A as Agents
 
-    J->>S: POST /simulate (flood claim)
+    U->>S: POST /simulate
     S->>C: submitObservation()
-    S-->>J: SSE observation_submitted
+    S-->>U: SSE observation_submitted
 
     par Parallel on Monad
         A->>C: agentVote() + stake
@@ -57,33 +45,31 @@ sequenceDiagram
         A->>C: agentVote() + stake
         A->>C: agentVote() + stake
     end
-    S-->>J: SSE vote × 4
+    S-->>U: SSE vote × 4
 
     S->>C: finalizeConsensus()
-    C->>C: Distribute rewards, update reputation
-    S-->>J: SSE finalized
+    S-->>U: SSE finalized
 ```
 
-## Why Monad Fits
+## Frontend Structure
 
-| Property | PoR Requirement | Monad Advantage |
-|----------|----------------|-----------------|
-| Storage isolation | Each observation = separate slot | Parallel execution without conflicts |
-| Concurrent agents | 4 votes per observation | Independent txns execute together |
-| Scale path | 1000 agents × N observations | Throughput doesn't queue linearly |
+| View | Source | Data |
+|------|--------|------|
+| Dashboard | `views/Dashboard.tsx` | Live observations, metrics |
+| Map | `views/MapView.tsx` (lazy) | On-chain geolocated claims |
+| Agents | `views/AgentsView.tsx` | Wallet, reputation, accuracy |
+| Treasury | `views/TreasuryView.tsx` | MON balances |
 
-## Components
+Design tokens: `frontend/src/theme/` (`colors.ts`, `tokens.ts`, `theme.ts`)
 
-| Layer | File | Role |
-|-------|------|------|
-| Contract | `contracts/ProofOfReality.sol` | On-chain truth, stakes, reputation |
-| Agents | `agents/agentSwarm.mjs` | AI voting swarm |
-| Finalizer | `agents/finalizer.mjs` | Auto-consensus when quorum met |
-| API | `server/index.mjs` | State, simulate, SSE |
-| Frontend | `frontend/src/` | Map, economy, demo, inspector |
+## Deployment
 
-## Network
+| Service | URL |
+|---------|-----|
+| Frontend | https://proof-of-reality-hazel.vercel.app |
+| Backend | https://backend-production-3dd92.up.railway.app |
+| Contract | `0x85c1C9CB97438DDE2E680804a7A6Dbff68F2bB38` |
 
-- **Chain**: Monad Testnet (Chain ID 10143)
-- **RPC**: `https://testnet-rpc.monad.xyz`
-- **Contract**: `0x85c1C9CB97438DDE2E680804a7A6Dbff68F2bB38`
+## Why Monad
+
+Each observation uses isolated contract storage. Independent agent votes on different observations execute in parallel — matching Monad's concurrent execution model.

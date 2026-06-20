@@ -1,12 +1,8 @@
 import type { Observation } from '../api';
-
-interface VoteRecord {
-  agent: string;
-  action: 'CONFIRM' | 'DISPUTE';
-  confidence: number;
-  stake: string;
-  reasoning: string;
-}
+import type { VoteRecord } from '../hooks/useNetworkState';
+import { theme, observationStatusColor } from '../theme/theme';
+import { agentColor } from '../theme/theme';
+import { Badge, Button } from './ui';
 
 interface Props {
   observation: Observation;
@@ -14,34 +10,25 @@ interface Props {
   onClose: () => void;
 }
 
-const AGENT_COLORS: Record<string, string> = {
-  'Agent-Flood': '#06b6d4',
-  'Agent-Grid': '#f59e0b',
-  'Agent-Crowd': '#10b981',
-  'Agent-Skeptic': '#a78bfa',
-};
-
 function statusLabel(obs: Observation): string {
-  if (!obs.finalized) return obs.voteCount > 0 ? 'VOTING' : 'PENDING';
-  return obs.status === 1 ? 'CONFIRMED' : 'DISPUTED';
+  if (!obs.finalized) return obs.voteCount > 0 ? 'In consensus' : 'Pending';
+  return obs.status === 1 ? 'Confirmed' : 'Disputed';
 }
 
-function statusColor(obs: Observation): string {
-  if (!obs.finalized) return obs.voteCount > 0 ? '#f59e0b' : '#64748b';
-  return obs.status === 1 ? '#10b981' : '#ef4444';
+function tone(obs: Observation): 'success' | 'warning' | 'danger' | 'neutral' {
+  if (!obs.finalized) return obs.voteCount > 0 ? 'warning' : 'neutral';
+  return obs.status === 1 ? 'success' : 'danger';
 }
 
 export default function ObservationInspector({ observation, votes, onClose }: Props) {
-  const color = statusColor(observation);
-  const label = statusLabel(observation);
   const confidence = observation.confidenceBps / 100;
   const totalStake = parseFloat(observation.confirmStake) + parseFloat(observation.disputeStake);
-  const confirmPct = totalStake > 0
-    ? Math.round((parseFloat(observation.confirmStake) / totalStake) * 100)
-    : 0;
+  const confirmPct = totalStake > 0 ? Math.round((parseFloat(observation.confirmStake) / totalStake) * 100) : 0;
 
   return (
     <div
+      role="dialog"
+      aria-modal
       style={{
         position: 'fixed',
         inset: 0,
@@ -49,193 +36,111 @@ export default function ObservationInspector({ observation, votes, onClose }: Pr
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(0,0,0,0.65)',
-        backdropFilter: 'blur(6px)',
-        animation: 'fade-in 0.2s ease',
+        background: 'rgba(0,0,0,0.5)',
+        padding: theme.spacing[4],
       }}
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: 'min(520px, 92vw)',
-          maxHeight: '85vh',
+          width: 'min(480px, 100%)',
+          maxHeight: '90vh',
           overflowY: 'auto',
-          background: 'var(--bg-1)',
-          border: '1px solid rgba(124,58,237,0.35)',
-          borderRadius: 16,
-          boxShadow: '0 24px 60px rgba(0,0,0,0.6), 0 0 40px rgba(124,58,237,0.15)',
-          padding: '20px 22px',
+          background: theme.colors.bg.surface,
+          border: `1px solid ${theme.colors.border.default}`,
+          borderRadius: theme.radius.md,
+          boxShadow: theme.shadow.lg,
+          padding: theme.spacing[6],
         }}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 16 }}>
-          <div style={{
-            width: 12, height: 12, borderRadius: '50%',
-            background: color, boxShadow: `0 0 12px ${color}`,
-            marginTop: 4, flexShrink: 0,
-          }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, color: '#64748b', fontFamily: 'var(--font-mono)', marginBottom: 4 }}>
-              OBSERVATION #{observation.id}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: theme.spacing[4] }}>
+          <div>
+            <div style={{ fontSize: theme.fontSize.xs, color: theme.colors.text.muted, fontFamily: theme.font.mono, marginBottom: theme.spacing[1] }}>
+              Observation #{observation.id}
             </div>
-            <div style={{ fontSize: 18, fontWeight: 800, color }}>{label}</div>
+            <Badge tone={tone(observation)}>{statusLabel(observation)}</Badge>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 8,
-              color: '#94a3b8',
-              cursor: 'pointer',
-              padding: '4px 10px',
-              fontSize: 14,
-            }}
-          >
-            ✕
-          </button>
+          <Button variant="ghost" onClick={onClose} style={{ padding: '4px 10px' }} aria-label="Close">
+            Close
+          </Button>
         </div>
 
-        {/* Claim */}
-        <div style={{
-          background: 'rgba(124,58,237,0.08)',
-          border: '1px solid rgba(124,58,237,0.2)',
-          borderRadius: 10,
-          padding: '12px 14px',
-          marginBottom: 14,
-        }}>
-          <div style={{ fontSize: 10, color: '#a78bfa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
-            {observation.claimType}
-          </div>
-          <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.5 }}>
-            {observation.description}
-          </div>
-          <div style={{ fontSize: 10, color: '#475569', marginTop: 8, fontFamily: 'var(--font-mono)' }}>
-            📍 {observation.lat.toFixed(4)}, {observation.lng.toFixed(4)}
-          </div>
-        </div>
+        <h2 style={{ margin: `0 0 ${theme.spacing[2]}px`, fontSize: theme.fontSize.lg, fontWeight: theme.fontWeight.semibold, textTransform: 'capitalize' }}>
+          {observation.claimType.replace(/_/g, ' ')}
+        </h2>
+        <p style={{ margin: `0 0 ${theme.spacing[4]}px`, color: theme.colors.text.secondary, lineHeight: 1.5, fontSize: theme.fontSize.sm }}>
+          {observation.description}
+        </p>
 
-        {/* Metrics grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: theme.spacing[3], marginBottom: theme.spacing[4] }}>
           {[
-            { label: 'Confidence', value: observation.finalized ? `${confidence.toFixed(0)}%` : '—', color: '#67e8f9' },
-            { label: 'Votes', value: `${observation.voteCount}/4`, color: '#a78bfa' },
-            { label: 'Total Stake', value: `${totalStake.toFixed(3)} MON`, color: '#f59e0b' },
-          ].map(({ label: l, value, color: c }) => (
-            <div key={l} style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: 8,
-              padding: '8px 10px',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: 9, color: '#64748b', marginBottom: 3 }}>{l}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: c, fontFamily: 'var(--font-mono)' }}>{value}</div>
+            { label: 'Confidence', value: observation.finalized ? `${confidence.toFixed(0)}%` : '—' },
+            { label: 'Votes', value: `${observation.voteCount}/4` },
+            { label: 'Stake', value: `${totalStake.toFixed(3)} MON` },
+          ].map(({ label, value }) => (
+            <div key={label} style={{ padding: theme.spacing[3], background: theme.colors.bg.elevated, borderRadius: theme.radius.md }}>
+              <div style={{ fontSize: theme.fontSize.xs, color: theme.colors.text.muted }}>{label}</div>
+              <div style={{ fontSize: theme.fontSize.base, fontWeight: theme.fontWeight.semibold, fontFamily: theme.font.mono, marginTop: 4 }}>{value}</div>
             </div>
           ))}
         </div>
 
-        {/* Consensus breakdown */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 10, color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-            Consensus Breakdown
+        <div style={{ marginBottom: theme.spacing[4] }}>
+          <div style={{ fontSize: theme.fontSize.xs, color: theme.colors.text.muted, marginBottom: theme.spacing[2] }}>Consensus breakdown</div>
+          <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', background: theme.colors.bg.muted }}>
+            <div style={{ flex: confirmPct, background: theme.colors.status.success }} />
+            <div style={{ flex: 100 - confirmPct, background: theme.colors.status.danger, opacity: parseFloat(observation.disputeStake) > 0 ? 1 : 0.3 }} />
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ flex: confirmPct, minWidth: 40 }}>
-              <div style={{
-                height: 8,
-                borderRadius: 4,
-                background: '#10b981',
-                boxShadow: '0 0 8px rgba(16,185,129,0.4)',
-              }} />
-              <div style={{ fontSize: 10, color: '#6ee7b7', marginTop: 4 }}>
-                CONFIRM {observation.confirmStake} MON ({confirmPct}%)
-              </div>
-            </div>
-            <div style={{ flex: 100 - confirmPct, minWidth: 20 }}>
-              <div style={{
-                height: 8,
-                borderRadius: 4,
-                background: '#ef4444',
-                opacity: parseFloat(observation.disputeStake) > 0 ? 1 : 0.2,
-              }} />
-              <div style={{ fontSize: 10, color: '#fca5a5', marginTop: 4 }}>
-                DISPUTE {observation.disputeStake} MON ({100 - confirmPct}%)
-              </div>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: theme.spacing[2], fontSize: theme.fontSize.xs, color: theme.colors.text.secondary }}>
+            <span>Confirm {observation.confirmStake} MON</span>
+            <span>Dispute {observation.disputeStake} MON</span>
           </div>
         </div>
 
-        {/* Agent votes */}
         <div>
-          <div style={{ fontSize: 10, color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-            Agent Votes
-          </div>
+          <div style={{ fontSize: theme.fontSize.xs, color: theme.colors.text.muted, marginBottom: theme.spacing[2] }}>Agent votes</div>
           {votes && votes.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {votes.map((v) => {
-                const ac = AGENT_COLORS[v.agent] || '#a78bfa';
-                return (
-                  <div key={v.agent} style={{
-                    background: `${ac}08`,
-                    border: `1px solid ${ac}22`,
-                    borderRadius: 8,
-                    padding: '8px 10px',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, fontSize: 11, color: ac }}>{v.agent}</span>
-                      <span style={{
-                        marginLeft: 'auto',
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: v.action === 'CONFIRM' ? '#6ee7b7' : '#fca5a5',
-                      }}>
-                        {v.action}
-                      </span>
-                      <span style={{ fontSize: 10, color: '#64748b', fontFamily: 'var(--font-mono)' }}>
-                        {v.stake} MON · {v.confidence}%
-                      </span>
-                    </div>
-                    {v.reasoning && (
-                      <div style={{ fontSize: 10, color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.4 }}>
-                        "{v.reasoning}"
-                      </div>
-                    )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[2] }}>
+              {votes.map((v) => (
+                <div key={v.agent} style={{ padding: theme.spacing[3], background: theme.colors.bg.elevated, borderRadius: theme.radius.md, border: `1px solid ${theme.colors.border.default}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ fontWeight: theme.fontWeight.medium, color: agentColor(v.agent), fontSize: theme.fontSize.sm }}>{v.agent}</span>
+                    <span style={{ fontSize: theme.fontSize.xs, fontFamily: theme.font.mono, color: v.action === 'CONFIRM' ? theme.colors.status.success : theme.colors.status.danger }}>
+                      {v.action} · {v.stake} MON
+                    </span>
                   </div>
-                );
-              })}
+                  {v.reasoning && (
+                    <p style={{ margin: 0, fontSize: theme.fontSize.xs, color: theme.colors.text.secondary, lineHeight: 1.45 }}>
+                      {v.reasoning}
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           ) : (
-            <div style={{
-              fontSize: 11,
-              color: '#475569',
-              padding: '10px',
-              background: 'rgba(255,255,255,0.02)',
-              borderRadius: 8,
-              textAlign: 'center',
-            }}>
+            <p style={{ fontSize: theme.fontSize.sm, color: theme.colors.text.muted, margin: 0 }}>
               {observation.finalized
-                ? `${observation.voteCount} votes recorded on-chain. Live reasoning available for recent observations.`
-                : 'Agents are voting — check Activity Feed for live updates.'}
-            </div>
+                ? `${observation.voteCount} votes recorded on-chain.`
+                : 'Agents are voting — check activity for updates.'}
+            </p>
           )}
         </div>
 
-        {/* Final outcome */}
         {observation.finalized && (
-          <div style={{
-            marginTop: 14,
-            padding: '10px 14px',
-            borderRadius: 8,
-            background: `${color}12`,
-            border: `1px solid ${color}44`,
-            textAlign: 'center',
-            fontSize: 12,
-            fontWeight: 700,
-            color,
-          }}>
-            Final Outcome: {label} at {confidence.toFixed(0)}% confidence
+          <div
+            style={{
+              marginTop: theme.spacing[4],
+              padding: theme.spacing[3],
+              borderRadius: theme.radius.md,
+              background: `${observationStatusColor(observation.finalized, observation.status, observation.voteCount)}14`,
+              fontSize: theme.fontSize.sm,
+              fontWeight: theme.fontWeight.medium,
+              color: observationStatusColor(observation.finalized, observation.status, observation.voteCount),
+              textAlign: 'center',
+            }}
+          >
+            {statusLabel(observation)} at {confidence.toFixed(0)}% confidence
           </div>
         )}
       </div>

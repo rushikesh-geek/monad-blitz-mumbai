@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react';
 import type { SSEEvent } from '../api';
+import { theme } from '../theme/theme';
+import EmptyState from './ui/EmptyState';
 
 export interface FeedEntry {
   id: string;
   timestamp: number;
   type: string;
   message: string;
-  color: string;
-  icon: string;
+  tone: 'brand' | 'success' | 'danger' | 'neutral';
 }
 
 interface Props {
@@ -22,7 +23,6 @@ function timeAgo(ts: number): string {
   return `${Math.floor(diff / 3600)}h ago`;
 }
 
-// This pure adapter intentionally shares a module with the feed component.
 // eslint-disable-next-line react-refresh/only-export-components
 export function sseEventToFeedEntry(event: SSEEvent): FeedEntry | null {
   const id = `${Date.now()}-${Math.random()}`;
@@ -33,116 +33,88 @@ export function sseEventToFeedEntry(event: SSEEvent): FeedEntry | null {
       return {
         id,
         timestamp,
-        type: 'observation',
-        message: `New observation #${event.obsId}: ${event.claimType.toUpperCase()} — ${event.description.substring(0, 50)}`,
-        color: '#a78bfa',
-        icon: '📡',
+        type: 'Observation',
+        message: `#${event.obsId} · ${event.claimType.replace(/_/g, ' ')} — ${event.description.substring(0, 60)}`,
+        tone: 'brand',
       };
     case 'vote':
       return {
         id,
         timestamp,
-        type: 'vote',
-        message: `${event.agent} ${event.action} | ${event.stake} MON | ${event.confidence}% conf — "${event.reasoning?.substring(0, 40)}"`,
-        color: event.action === 'CONFIRM' ? '#10b981' : '#ef4444',
-        icon: event.action === 'CONFIRM' ? '✅' : '❌',
+        type: 'Vote',
+        message: `${event.agent} · ${event.action} · ${event.stake} MON`,
+        tone: event.action === 'CONFIRM' ? 'success' : 'danger',
       };
-    case 'finalized': {
-      const bps = Math.round(event.confidenceBps / 100);
+    case 'finalized':
       return {
         id,
         timestamp,
-        type: 'consensus',
-        message: `Consensus #${event.obsId}: ${event.result} — ${bps}% confidence`,
-        color: event.result === 'CONFIRMED' ? '#10b981' : '#ef4444',
-        icon: event.result === 'CONFIRMED' ? '🏆' : '⚠️',
+        type: 'Consensus',
+        message: `#${event.obsId} · ${event.result} · ${Math.round(event.confidenceBps / 100)}% confidence`,
+        tone: event.result === 'CONFIRMED' ? 'success' : 'danger',
       };
-    }
     default:
       return null;
   }
 }
 
+const toneColor = {
+  brand: theme.colors.brand.primary,
+  success: theme.colors.status.success,
+  danger: theme.colors.status.danger,
+  neutral: theme.colors.text.muted,
+};
+
 export default function ActivityFeed({ entries }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [entries]);
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [entries.length]);
+
+  if (entries.length === 0) {
+    return (
+      <EmptyState
+        title="No activity yet"
+        description="Network events will appear here as observations are verified."
+      />
+    );
+  }
 
   return (
     <div
-      ref={containerRef}
       style={{
-        height: '100%',
+        flex: 1,
         overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
-        padding: '2px 4px 2px 2px',
+        gap: theme.spacing[2],
+        padding: theme.spacing[2],
       }}
     >
-      {entries.length === 0 && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          gap: 10,
-          color: '#475569',
-        }}>
-          <div style={{ fontSize: 28 }}>📡</div>
-          <div style={{ fontSize: 13 }}>Waiting for events...</div>
-          <div style={{ fontSize: 11, color: '#334155' }}>Click a button to simulate an event</div>
-        </div>
-      )}
-
-      {entries.map((entry, i) => (
+      {entries.slice().reverse().map((entry) => (
         <div
           key={entry.id}
           style={{
-            display: 'flex',
-            gap: 10,
-            alignItems: 'flex-start',
-            padding: '8px 10px',
-            borderRadius: 8,
-            background: 'rgba(255,255,255,0.02)',
-            borderLeft: `2px solid ${entry.color}66`,
-            animation: 'fade-in 0.3s ease',
-            animationFillMode: 'both',
-            animationDelay: `${Math.min(i * 0.02, 0.1)}s`,
+            padding: theme.spacing[3],
+            borderRadius: theme.radius.md,
+            background: theme.colors.bg.elevated,
+            border: `1px solid ${theme.colors.border.default}`,
           }}
         >
-          <span style={{ fontSize: 14, flexShrink: 0 }}>{entry.icon}</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: 11,
-              color: '#94a3b8',
-              lineHeight: 1.4,
-              wordBreak: 'break-word',
-            }}>
-              <span style={{ color: entry.color, fontWeight: 600 }}>
-                {entry.type.toUpperCase()}{' '}
-              </span>
-              {entry.message}
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: theme.spacing[2], marginBottom: 4 }}>
+            <span style={{ fontSize: theme.fontSize.xs, fontWeight: theme.fontWeight.semibold, color: toneColor[entry.tone] }}>
+              {entry.type}
+            </span>
+            <span style={{ fontSize: theme.fontSize.xs, color: theme.colors.text.muted, fontFamily: theme.font.mono }}>
+              {timeAgo(entry.timestamp)}
+            </span>
           </div>
-          <div style={{
-            fontSize: 10,
-            color: '#334155',
-            flexShrink: 0,
-            fontFamily: 'var(--font-mono)',
-            paddingTop: 1,
-          }}>
-            {timeAgo(entry.timestamp)}
+          <div style={{ fontSize: theme.fontSize.sm, color: theme.colors.text.secondary, lineHeight: 1.45, wordBreak: 'break-word' }}>
+            {entry.message}
           </div>
         </div>
       ))}
-
       <div ref={bottomRef} />
     </div>
   );
