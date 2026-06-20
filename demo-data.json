@@ -1,0 +1,160 @@
+{
+  "observations": [
+    {
+      "id": "3",
+      "reporter": "0x7fF1cbd4B4d17284817CADd01dEC502D3cB60177",
+      "claimType": "flood",
+      "description": "Heavy flooding reported in Andheri during monsoon. SV Road completely submerged.",
+      "lat": 19.11,
+      "lng": 72.83,
+      "timestamp": 1781937167,
+      "status": 1,
+      "confirmStake": "0.014",
+      "disputeStake": "0.0",
+      "finalized": true,
+      "voteCount": 4,
+      "confidenceBps": 10000
+    },
+    {
+      "id": "4",
+      "reporter": "0x7fF1cbd4B4d17284817CADd01dEC502D3cB60177",
+      "claimType": "power_outage",
+      "description": "Complete power failure across Bandra West. Hill Road and Linking Road affected. 3000+ households without electricity.",
+      "lat": 19.0596,
+      "lng": 72.8295,
+      "timestamp": 1781937185,
+      "status": 1,
+      "confirmStake": "0.157",
+      "disputeStake": "0.0",
+      "finalized": true,
+      "voteCount": 4,
+      "confidenceBps": 10000
+    },
+    {
+      "id": "7",
+      "reporter": "0x7fF1cbd4B4d17284817CADd01dEC502D3cB60177",
+      "claimType": "traffic",
+      "description": "Major traffic snarl at Dadar TT circle. 2km backup on Eastern Express Highway. Signal failure suspected.",
+      "lat": 19.0178,
+      "lng": 72.8478,
+      "timestamp": 1781937328,
+      "status": 1,
+      "confirmStake": "0.014",
+      "disputeStake": "0.0",
+      "finalized": true,
+      "voteCount": 4,
+      "confidenceBps": 10000
+    },
+    {
+      "id": "9",
+      "reporter": "0x7fF1cbd4B4d17284817CADd01dEC502D3cB60177",
+      "claimType": "atm_outage",
+      "description": "Multiple ATMs non-functional in Kurla West near LBS Road. 8 machines offline, long queues forming.",
+      "lat": 19.0726,
+      "lng": 72.8845,
+      "timestamp": 1781940227,
+      "status": 2,
+      "confirmStake": "0.030",
+      "disputeStake": "0.070",
+      "finalized": true,
+      "voteCount": 4,
+      "confidenceBps": 7000
+    }
+  ],
+  "agents": [
+    {
+      "persona": "Agent-Flood",
+      "address": "0x1aFC369Db91De7bC56447272451E334D014b6649",
+      "registered": true,
+      "reputation": 140,
+      "totalVotes": 8,
+      "correctVotes": 8,
+      "accuracy": 100,
+      "balance": "4.272990614"
+    },
+    {
+      "persona": "Agent-Grid",
+      "address": "0xDac5e0d1513C3077cF2E968a04cd842FF8382346",
+      "registered": true,
+      "reputation": 155,
+      "totalVotes": 11,
+      "correctVotes": 11,
+      "accuracy": 100,
+      "balance": "4.402547812"
+    },
+    {
+      "persona": "Agent-Crowd",
+      "address": "0xc5A0D383EF3bD534901C1c1653f340340ccFD5cf",
+      "registered": true,
+      "reputation": 155,
+      "totalVotes": 11,
+      "correctVotes": 11,
+      "accuracy": 100,
+      "balance": "4.359711586"
+    },
+    {
+      "persona": "Agent-Skeptic",
+      "address": "0x20601819f09238a4b78c0Ea6B0257d20b23BF1e4",
+      "registered": true,
+      "reputation": 145,
+      "totalVotes": 11,
+      "correctVotes": 10,
+      "accuracy": 91,
+      "balance": "4.395999328"
+    }
+  ],
+  "recentObs": [
+    {
+      "obsId": "9",
+      "claimType": "flood",
+      "description": "Severe waterlogging reported near Andheri station. Knee-deep water blocking SV Road traffic.",
+      "votes": [
+        {
+          "agent": "Agent-Flood",
+          "action": "CONFIRM",
+          "confidence": 92,
+          "stake": "0.10",
+          "reasoning": "Monsoon-season flooding near Andheri is highly plausible. Waterlogging indicators match historical patterns.",
+          "source": "[AI]",
+          "timestamp": 1781940230
+        },
+        {
+          "agent": "Agent-Grid",
+          "action": "CONFIRM",
+          "confidence": 75,
+          "stake": "0.05",
+          "reasoning": "No utility failure indicators, but heavy rain corroborates the flooding claim.",
+          "source": "[AI]",
+          "timestamp": 1781940232
+        },
+        {
+          "agent": "Agent-Crowd",
+          "action": "CONFIRM",
+          "confidence": 80,
+          "stake": "0.05",
+          "reasoning": "Congestion patterns near Andheri station align with a major waterlogging event.",
+          "source": "[AI]",
+          "timestamp": 1781940234
+        },
+        {
+          "agent": "Agent-Skeptic",
+          "action": "CONFIRM",
+          "confidence": 65,
+          "stake": "0.05",
+          "reasoning": "Report appears genuine. No duplicate signatures detected in recent observation set.",
+          "source": "[AI]",
+          "timestamp": 1781940236
+        }
+      ],
+      "result": "CONFIRMED",
+      "confidenceBps": 10000,
+      "timestamp": 1781940227
+    }
+  ],
+  "operator": {
+    "address": "0x7fF1cbd4B4d17284817CADd01dEC502D3cB60177",
+    "balance": "3.859712114"
+  },
+  "contractAddress": "0x85c1C9CB97438DDE2E680804a7A6Dbff68F2bB38",
+  "chainId": 10143
+}
