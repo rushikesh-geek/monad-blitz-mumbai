@@ -22,6 +22,8 @@ function timeAgo(ts: number): string {
   return `${Math.floor(diff / 3600)}h ago`;
 }
 
+// This pure adapter intentionally shares a module with the feed component.
+// eslint-disable-next-line react-refresh/only-export-components
 export function sseEventToFeedEntry(event: SSEEvent): FeedEntry | null {
   const id = `${Date.now()}-${Math.random()}`;
   const timestamp = Date.now();

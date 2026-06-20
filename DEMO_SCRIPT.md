@@ -11,7 +11,7 @@ Before you walk on stage:
 
 - [ ] `node server/index.mjs` running in Terminal 1
 - [ ] `cd frontend && npm run dev` running in Terminal 2
-- [ ] Browser open at http://localhost:5173
+- [ ] Browser open at the deployed `FRONTEND_URL`
 - [ ] Activity feed visible (right panel)
 - [ ] Sidebar showing Simulate Event buttons
 - [ ] Terminal 1 shows: `✓ Agent-Flood online`, `✓ Agent-Grid online`, etc.

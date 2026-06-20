@@ -85,11 +85,11 @@ node server/index.mjs
 cd frontend && npm run dev
 ```
 
-Open **http://localhost:5173**
+Open the frontend URL printed by Vite. Set `BACKEND_URL` before starting the dev server.
 
 ### Trigger a simulation
 ```powershell
-Invoke-RestMethod -Method Post -Uri "http://localhost:3001/simulate" `
+Invoke-RestMethod -Method Post -Uri "$env:BACKEND_URL/simulate" `
   -ContentType "application/json" `
   -Body '{"claimType":"flood","description":"Flooding near Andheri station","lat":19.1136,"lng":72.8697}'
 ```

@@ -4,8 +4,10 @@ import chalk from 'chalk';
 import axios from 'axios';
 import fs from 'fs';
 
-const { address, abi } = JSON.parse(fs.readFileSync('./shared/contracts.json', 'utf8'));
-const provider = new ethers.JsonRpcProvider('https://testnet-rpc.monad.xyz');
+const deployment = JSON.parse(fs.readFileSync(new URL('../shared/contracts.json', import.meta.url), 'utf8'));
+const address = process.env.CONTRACT_ADDRESS || deployment.address;
+const { abi } = deployment;
+const provider = new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL || 'https://testnet-rpc.monad.xyz');
 
 const AGENTS = [
   { key: process.env.AGENT_1_PRIVATE_KEY, persona: 'Agent-Flood', specialty: 'waterlogging/flood events' },

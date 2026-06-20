@@ -39,7 +39,10 @@ export default function LiveDemoButton({ onDemoStart, onDemoStep, disabled, onRu
 
   // Sync running state when parent disables after demo completes
   useEffect(() => {
-    if (disabled && running) setRunning(false);
+    const timer = window.setTimeout(() => {
+      if (disabled && running) setRunning(false);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [disabled, running]);
 
   return (

@@ -74,8 +74,8 @@ export default function SimulatePanel({ onSimulated }: Props) {
       });
       setLastResult({ label: event.label, obsId: result.observationId });
       onSimulated?.(result.observationId);
-    } catch (e: any) {
-      setError(e.message || 'Simulation failed');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Simulation failed');
     } finally {
       setLoading(null);
     }

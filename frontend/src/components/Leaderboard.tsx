@@ -50,8 +50,12 @@ export default function Leaderboard({ agents }: Props) {
       prevRepRef.current[agent.persona] = agent.reputation;
     }
     if (newFlash.size > 0) {
-      setFlashIds(newFlash);
-      setTimeout(() => setFlashIds(new Set()), 1500);
+      const startTimer = window.setTimeout(() => setFlashIds(newFlash), 0);
+      const endTimer = window.setTimeout(() => setFlashIds(new Set()), 1500);
+      return () => {
+        window.clearTimeout(startTimer);
+        window.clearTimeout(endTimer);
+      };
     }
   }, [agents]);
 

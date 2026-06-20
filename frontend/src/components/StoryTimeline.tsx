@@ -156,6 +156,8 @@ export default function StoryTimeline({ activeStep, obsId, highlight }: Props) {
   );
 }
 
+// This pure state adapter intentionally shares a module with the timeline component.
+// eslint-disable-next-line react-refresh/only-export-components
 export function deriveStoryStep(
   obs: { votes: unknown[]; result?: string } | null,
   demoStep?: StoryStep,

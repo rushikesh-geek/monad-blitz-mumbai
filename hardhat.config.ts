@@ -5,8 +5,8 @@ export default defineConfig({
   networks: {
     monad: {
       type: "http",
-      url: "https://testnet-rpc.monad.xyz",
-      chainId: 10143,
+      url: process.env.MONAD_RPC_URL ?? "https://testnet-rpc.monad.xyz",
+      chainId: Number(process.env.MONAD_CHAIN_ID ?? 10143),
       accounts: process.env.OPERATOR_PRIVATE_KEY ? [process.env.OPERATOR_PRIVATE_KEY] : [],
     },
   },

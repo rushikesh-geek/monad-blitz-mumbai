@@ -43,6 +43,9 @@ export default function App() {
   const [feedEntries, setFeedEntries] = useState<FeedEntry[]>([]);
   const [activePanel, setActivePanel] = useState<Panel>('map');
   const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [demoMode, setDemoMode] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [recentVotes, setRecentVotes] = useState<VoteRecord[]>([]);
   const [recentObs, setRecentObs] = useState<ObsVotes[]>([]);
   const [selectedObs, setSelectedObs] = useState<Observation | null>(null);
@@ -60,9 +63,15 @@ export default function App() {
       const state = await fetchState();
       setObservations(state.observations);
       setAgents(state.agents);
-      setConnected(true);
-    } catch {
+      const usingDemo = state.source === 'demo';
+      setDemoMode(usingDemo);
+      setConnected(!usingDemo);
+      setConnectionError(usingDemo ? 'Backend or RPC unavailable. Showing bundled demo data.' : null);
+    } catch (error) {
       setConnected(false);
+      setConnectionError(error instanceof Error ? error.message : 'Unable to load live or demo data.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -175,14 +184,17 @@ export default function App() {
   }, [refreshState]);
 
   useEffect(() => {
-    refreshState();
-    pollRef.current = setInterval(refreshState, 5000);
-    const disconnect = connectSSE(handleSSEEvent);
+    const initialRefresh = window.setTimeout(() => { void refreshState(); }, 0);
+    pollRef.current = setInterval(refreshState, 15_000);
+    const disconnect = connectSSE(handleSSEEvent, (isConnected) => {
+      if (!demoMode) setConnected(isConnected);
+    });
     return () => {
+      window.clearTimeout(initialRefresh);
       if (pollRef.current) clearInterval(pollRef.current);
       disconnect();
     };
-  }, [refreshState, handleSSEEvent]);
+  }, [refreshState, handleSSEEvent, demoMode]);
 
   const handleDemoStart = useCallback(() => {
     setDemoRunning(true);
@@ -195,7 +207,7 @@ export default function App() {
   }, []);
 
   const selectedObsVotes = selectedObs
-    ? obsMapRef.current.get(selectedObs.id)?.votes
+    ? recentObs.find((observation) => observation.obsId === selectedObs.id)?.votes
     : undefined;
 
   const pendingCount = observations.filter((o) => !o.finalized && o.voteCount === 0).length;
@@ -363,6 +375,39 @@ export default function App() {
           Monad Testnet
         </div>
       </header>
+
+      {(loading || connectionError) && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 10,
+          padding: '7px 14px',
+          background: loading ? 'rgba(59,130,246,0.12)' : 'rgba(245,158,11,0.12)',
+          borderBottom: `1px solid ${loading ? 'rgba(59,130,246,0.25)' : 'rgba(245,158,11,0.25)'}`,
+          color: loading ? '#93c5fd' : '#fcd34d',
+          fontSize: 11,
+          flexShrink: 0,
+        }}>
+          <span>{loading ? 'Loading live Monad state…' : connectionError}</span>
+          {!loading && (
+            <button
+              onClick={() => { setLoading(true); void refreshState(); }}
+              style={{
+                border: '1px solid rgba(245,158,11,0.4)',
+                borderRadius: 5,
+                background: 'transparent',
+                color: '#fcd34d',
+                padding: '2px 7px',
+                cursor: 'pointer',
+                fontSize: 10,
+              }}
+            >
+              Retry live connection
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ═══ BODY ═══ */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>

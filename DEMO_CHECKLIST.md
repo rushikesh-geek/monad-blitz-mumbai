@@ -2,9 +2,9 @@
 
 ## Pre-Demo (30 min before)
 
-- [ ] **Backend running** — `node server/index.mjs` → shows `PoR Server running on http://localhost:3001`
-- [ ] **Frontend running** — `cd frontend && npm run dev` → open http://localhost:5173 (or 5174)
-- [ ] **RPC healthy** — `Invoke-RestMethod http://localhost:3001/health` returns `status: ok`
+- [ ] **Backend running** — Railway deployment shows `PoR Server listening on port ...`
+- [ ] **Frontend running** — open the deployed `FRONTEND_URL`
+- [ ] **RPC healthy** — `Invoke-RestMethod "$env:BACKEND_URL/health"` returns `status: ok`
 - [ ] **Agent swarm healthy** — Terminal shows `✓ Agent-Flood online` × 4
 - [ ] **Finalizer healthy** — No error spam in server terminal
 - [ ] **Live indicator green** — Header shows "Live" not "Connecting..."
@@ -35,8 +35,8 @@
 
 | Issue | Fix |
 |-------|-----|
-| Server won't start (port in use) | Already running — check `http://localhost:3001/health` |
-| Frontend won't load | Try port 5174; restart with `npm run dev` |
+| Server won't start | Check Railway deployment logs and `$env:BACKEND_URL/health` |
+| Frontend won't load | Check the latest Vercel deployment and `VITE_API_URL` |
 | RPC timeout | Wait 10s, refresh; show backup video |
 | Agents not voting | Restart server; OpenRouter fallback uses rule-based voting |
 | Demo button fails | Use sidebar "Flood near Andheri" button instead |
